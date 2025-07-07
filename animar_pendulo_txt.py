@@ -15,8 +15,8 @@ def angulos_a_xy(θ1, θ2):
     return x1, y1, x2, y2
 
 # === Elegir las trayectorias a animar ===
-idx1 = 2
-idx2 = 3
+idx1 = 1
+idx2 = 1
 
 tray1 = np.loadtxt(f"trayectorias_txt/trayectoria_{idx1}.txt")
 tray2 = np.loadtxt(f"trayectorias_txt/trayectoria_{idx2}.txt")

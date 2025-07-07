@@ -1,0 +1,4 @@
+Parámetros del ajuste exponencial:
+a = 1.2610e-01 ± 5.6878e-02
+b = 6.6468e-02 ± 1.1833e-02
+c = -9.2911e-02 ± 8.7972e-02
