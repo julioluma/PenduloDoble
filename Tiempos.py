@@ -4,7 +4,9 @@ import numba as nb
 import os
 import time
 
-inicio = time.time()
+
+
+
 # Parámetros físicos
 E_vals = np.linspace(0.0, 35.0, 36)  # Ajusta el rango según tu sistema
 g = 9.81
@@ -89,81 +91,40 @@ def simular_y_lyapunov_con_rk4(y0, T=50, dt=0.01, delta0=1e-8):
     lyap = np.mean(log_divs) / dt
     return lyap, np.array(trayectoria)
 
-# Bucle sobre distintos valores de energía total inicial
-energias = []
-lyapunovs = []
-trayectorias = []
-#trayectorias2 = []
 
-for E in E_vals:
-    θ2 = 0.0
-    ω1 = 0.0
-    ω2 = 0.0
-    θ1 = buscar_theta1_para_energia(E, θ2, ω1, ω2)
-    y0 = [θ1, ω1, θ2, ω2]
-    E_real = energia_total(θ1, ω1, θ2, ω2)
-    λ, trayectoria = simular_y_lyapunov_con_rk4(y0, T=40, dt=0.01)
-    energias.append(E_real)
-    lyapunovs.append(λ)
-    trayectorias.append(trayectoria)
-    #trayectorias2.append(trayectoria2)
-    print(f"E={E_real:.2f} J (θ1={θ1:.2f} rad) -> λ_max={λ:.4f}")
+os.makedirs("Tiempos", exist_ok=True)
+with open(f"Tiempos/PC_T=50_dt=001.txt", "w") as f:
+    f.write(f"threads , Tiempo\n" )
 
-final = time.time()
+for threads in range(1, 11):
+    inicio = time.time()
+    nb.config.NUMBA_NUM_THREADS = threads
+    print(f"Usando {threads} hilos de Numba")
+    # Bucle sobre distintos valores de energía total inicial
+    energias = []
+    lyapunovs = []
+    trayectorias = []
+    #trayectorias2 = []
 
-from scipy.optimize import curve_fit
+    for E in E_vals:
+        θ2 = 0.0
+        ω1 = 0.0
+        ω2 = 0.0
+        θ1 = buscar_theta1_para_energia(E, θ2, ω1, ω2)
+        y0 = [θ1, ω1, θ2, ω2]
+        E_real = energia_total(θ1, ω1, θ2, ω2)
+        λ, trayectoria = simular_y_lyapunov_con_rk4(y0, T=40, dt=0.01)
+        energias.append(E_real)
+        lyapunovs.append(λ)
+        trayectorias.append(trayectoria)
+        #trayectorias2.append(trayectoria2)
+        print(f"E={E_real:.2f} J (θ1={θ1:.2f} rad) -> λ_max={λ:.4f}")
 
-# Definir la función exponencial para el ajuste
-def exp_func(x, a, b, c):
-    return a * np.exp(b * x) + c
+    final = time.time()
 
-# Realizar el ajuste
-popt, pcov = curve_fit(exp_func, energias, lyapunovs, maxfev=10000)
-
-# Generar valores ajustados para graficar la curva
-energias_fit = np.linspace(min(energias), max(energias), 200)
-lyapunovs_fit = exp_func(energias_fit, *popt)
-
-# Después de hacer el ajuste:
-popt, pcov = curve_fit(exp_func, energias, lyapunovs, maxfev=10000)
-
-# popt contiene [a, b, c]
-a, b, c = popt
-# Los errores estándar son la raíz cuadrada de la diagonal de la matriz de covarianza
-a_err, b_err, c_err = np.sqrt(np.diag(pcov))
-
-print(f"Parámetros del ajuste exponencial:")
-print(f"a = {a:.4e} ± {a_err:.4e}")
-print(f"b = {b:.4e} ± {b_err:.4e}")
-print(f"c = {c:.4e} ± {c_err:.4e}")
-
-# Graficar datos y ajuste
-plt.plot(energias, lyapunovs, marker='o', label="Datos")
-plt.plot(energias_fit, lyapunovs_fit, 'r--', label="Ajuste exponencial")
-plt.xlabel("Energía total inicial [J]")
-plt.ylabel("Exponente de Lyapunov máximo [s⁻¹]")
-plt.title("RK4: Caos vs Energía en el Péndulo Doble\n Tiempo de ejecución: {:.2f} s".format(final - inicio))
-plt.grid(True)
-plt.legend()
+    #Guardar tiempo de ejecución en carpeta 'Tiempos'
+    os.makedirs("Tiempos", exist_ok=True)
+    with open(f"Tiempos/JOEL_T=50_dt=001.txt", "a") as f:
+        f.write(f"{threads},{final - inicio}\n" )
 
 
-
-guardar = True  # Cambia a False si no deseas guardar la figura
-
-if guardar:
-    os.makedirs("plots", exist_ok=True)
-    plt.savefig("plots/lyapunov_vs_energia.png")
-
-plt.show()
-
-# Directorio de salida
-os.makedirs("trayectorias_txt", exist_ok=True)
-for i, trayectoria in enumerate(trayectorias):
-    np.savetxt(f"trayectorias_txt/trayectoria_{i}.txt", trayectoria)
-    print(f"Guardada trayectoria_{i}.txt")
-
-# Directorio de salida
-#os.makedirs("trayectorias_mod_txt", exist_ok=True)
-#for i, trayectoria2 in enumerate(trayectorias2):
-#    np.savetxt(f"trayectorias_mod_txt/trayectoria2_{i}.txt", trayectoria2)
-#    print(f"Guardada trayectoria2_{i}.txt")
