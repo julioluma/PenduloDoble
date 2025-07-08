@@ -47,7 +47,7 @@ for idx in [5, 10, 15]:  # Cambia el rango según las trayectorias que tengas
     ani = animation.FuncAnimation(fig, update, frames=len(x1_1), blit=True, interval=20)
 
     # === Crear carpeta 'animations' y guardar video ===
-    guardar = True  # Cambia a False si no deseas guardar
+    guardar = False  # Cambia a False si no deseas guardar
 
     if guardar:
         os.makedirs("animations", exist_ok=True)

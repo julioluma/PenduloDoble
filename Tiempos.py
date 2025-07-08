@@ -92,39 +92,41 @@ def simular_y_lyapunov_con_rk4(y0, T=50, dt=0.01, delta0=1e-8):
     return lyap, np.array(trayectoria)
 
 
-os.makedirs("Tiempos", exist_ok=True)
-with open(f"Tiempos/PC_T=50_dt=001.txt", "w") as f:
-    f.write(f"threads , Tiempo\n" )
 
-for threads in range(1, 11):
-    inicio = time.time()
-    nb.config.NUMBA_NUM_THREADS = threads
-    print(f"Usando {threads} hilos de Numba")
-    # Bucle sobre distintos valores de energía total inicial
-    energias = []
-    lyapunovs = []
-    trayectorias = []
-    #trayectorias2 = []
 
-    for E in E_vals:
-        θ2 = 0.0
-        ω1 = 0.0
-        ω2 = 0.0
-        θ1 = buscar_theta1_para_energia(E, θ2, ω1, ω2)
-        y0 = [θ1, ω1, θ2, ω2]
-        E_real = energia_total(θ1, ω1, θ2, ω2)
-        λ, trayectoria = simular_y_lyapunov_con_rk4(y0, T=40, dt=0.01)
-        energias.append(E_real)
-        lyapunovs.append(λ)
-        trayectorias.append(trayectoria)
-        #trayectorias2.append(trayectoria2)
-        print(f"E={E_real:.2f} J (θ1={θ1:.2f} rad) -> λ_max={λ:.4f}")
+for rep in range(1, 4):
 
-    final = time.time()
-
-    #Guardar tiempo de ejecución en carpeta 'Tiempos'
     os.makedirs("Tiempos", exist_ok=True)
-    with open(f"Tiempos/JOEL_T=50_dt=001.txt", "a") as f:
-        f.write(f"{threads},{final - inicio}\n" )
+    with open(f"Tiempos/JOEL{rep}_T=50_dt=001.txt", "w") as f:
+        f.write()
 
+    for threads in range(1, 17):
+        inicio = time.time()
+        nb.config.NUMBA_NUM_THREADS = threads
+        print(f"Usando {threads} hilos de Numba")
+        # Bucle sobre distintos valores de energía total inicial
+        energias = []
+        lyapunovs = []
+        trayectorias = []
+        #trayectorias2 = []
 
+        for E in E_vals:
+            θ2 = 0.0
+            ω1 = 0.0
+            ω2 = 0.0
+            θ1 = buscar_theta1_para_energia(E, θ2, ω1, ω2)
+            y0 = [θ1, ω1, θ2, ω2]
+            E_real = energia_total(θ1, ω1, θ2, ω2)
+            λ, trayectoria = simular_y_lyapunov_con_rk4(y0, T=40, dt=0.01)
+            energias.append(E_real)
+            lyapunovs.append(λ)
+            trayectorias.append(trayectoria)
+            #trayectorias2.append(trayectoria2)
+            print(f"E={E_real:.2f} J (θ1={θ1:.2f} rad) -> λ_max={λ:.4f}")
+
+        final = time.time()
+
+        #Guardar tiempo de ejecución en carpeta 'Tiempos'
+        os.makedirs("Tiempos", exist_ok=True)
+        with open(f"Tiempos/JOEL{rep}_T=50_dt=001.txt", "a") as f:
+            f.write(f"{threads},{final - inicio}\n" )
